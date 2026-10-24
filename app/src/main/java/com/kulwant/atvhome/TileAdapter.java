@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Material 3 cards for the dock and the grid (16:9, 20 dp corners). Focus is driven by HomeActivity, never by Android focus. */
+/** Banner tiles for the dock and the grid. Focus is driven by HomeActivity, never by Android focus. */
 final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
 
-    static final float FOCUS_SCALE = 1.10f;   // Material focus scale
+    static final float FOCUS_SCALE = 1.10f;
 
     final List<AppRepo.App> apps = new ArrayList<>();
     private final int cellW, cardW, cardH, labelSpace;
@@ -64,8 +64,7 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
         ImageView card = new ImageView(c);
         card.setId(R.id.card);
         card.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        // Material media shape: 20 dp corners
-        final float radius = Ui.dp(c, 20);
+        final float radius = Ui.dp(c, labels ? 26 : 22);
         card.setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View v, Outline o) {
@@ -73,18 +72,17 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
             }
         });
         card.setClipToOutline(true);
-        card.setForeground(Ui.rounded(0, radius, Math.max(1, Ui.dp(c, 1)), 0x1FFFFFFF));   // hairline edge
+        card.setForeground(Ui.rounded(0, radius, Math.max(1, Ui.dp(c, 1)), 0x1FFFFFFF));   // hairline edge for dark banners
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(cardW, cardH, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         root.addView(card, lp);
 
-        // Material label row: fixed height under every card so the row never jumps
         TextView label = Ui.text(c, 400, 13, labelColor);
         label.setGravity(Gravity.CENTER);
-        label.setAlpha(labels ? 1f : 0f);
+        label.setAlpha(0f);
         label.setEllipsize(android.text.TextUtils.TruncateAt.END);
         FrameLayout.LayoutParams llp = new FrameLayout.LayoutParams(cardW, ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        llp.topMargin = cardH + Ui.dp(c, 8);
+        llp.topMargin = cardH + Ui.dp(c, 12);
         root.addView(label, llp);
         return new Holder(root, card, label);
     }
@@ -97,7 +95,7 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
         boolean f = pos == focused;
         h.card.setScaleX(f ? FOCUS_SCALE : 1f);
         h.card.setScaleY(f ? FOCUS_SCALE : 1f);
-        h.label.setAlpha(labels ? 1f : 0f);
+        h.label.setAlpha(f && labels ? 1f : 0f);
     }
 
     @Override
@@ -121,5 +119,6 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
         float s = on ? FOCUS_SCALE : 1f;
         h.card.animate().scaleX(s).scaleY(s).setDuration(220)
                 .setInterpolator(new DecelerateInterpolator(1.6f)).start();
+        h.label.animate().alpha(on && labels ? 1f : 0f).setDuration(on ? 220 : 120).start();
     }
 }

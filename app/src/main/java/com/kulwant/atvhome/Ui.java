@@ -7,7 +7,7 @@ import android.util.SparseArray;
 import android.util.TypedValue;
 import android.widget.TextView;
 
-/** Small helpers: dp, the Google Sans Flex variable font at a given weight, and shared drawables. */
+/** Small helpers: dp, the Outfit variable font at a given weight, and shared drawables. */
 final class Ui {
     private static final SparseArray<Typeface> FONTS = new SparseArray<>();
 
@@ -21,7 +21,7 @@ final class Ui {
         Typeface t = FONTS.get(weight);
         if (t == null) {
             try {
-                t = new Typeface.Builder(c.getAssets(), "fonts/GoogleSansFlex.ttf")
+                t = new Typeface.Builder(c.getAssets(), "fonts/Outfit.ttf")
                         .setFontVariationSettings("'wght' " + weight)
                         .build();
             } catch (Exception e) {

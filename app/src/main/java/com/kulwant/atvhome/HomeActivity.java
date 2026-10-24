@@ -59,10 +59,10 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private SharedPreferences prefs;
 
-    // Material theme: dark (default) or light, switched from the Theme pill
+    // Dark (default) or light theme, switched from the Theme pill
     private boolean lightTheme;
-    private int colText, colTextDim, colStrip, colStripStroke, colInverse, colOnInverse,
-            colCardLabel, colHeader;
+    private int colText, colTextDim, colHeader, colCardLabel, colPillFill, colPillStroke, colPillText,
+            colBand, colBandStroke;
     private int[] scrimColors;
 
     // layout (px)
@@ -313,22 +313,24 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         if (lightTheme) {
             colText = 0xFF1A1C1E;
             colTextDim = 0xD91A1C1E;
-            colStrip = 0xCCFFFFFF;
-            colStripStroke = 0x33000000;
-            colInverse = 0xFF1A1C1E;
-            colOnInverse = 0xFFFFFFFF;
-            colCardLabel = 0xE61A1C1E;
             colHeader = 0xE61A1C1E;
+            colCardLabel = 0xE61A1C1E;
+            colPillFill = 0xCCFFFFFF;
+            colPillStroke = 0x40000000;
+            colPillText = 0xFF1A1C1E;
+            colBand = 0x66FFFFFF;
+            colBandStroke = 0x40000000;
             scrimColors = new int[]{0x66FFFFFF, 0x73FFFFFF, 0xE6FFFFFF};
         } else {
             colText = 0xFFFFFFFF;
             colTextDim = 0xD9FFFFFF;
-            colStrip = 0xCC1E1E22;
-            colStripStroke = 0x33FFFFFF;
-            colInverse = 0xFFFFFFFF;
-            colOnInverse = 0xFF000000;
-            colCardLabel = 0xEEFFFFFF;
             colHeader = 0xE6FFFFFF;
+            colCardLabel = 0xEEFFFFFF;
+            colPillFill = 0x2BFFFFFF;
+            colPillStroke = 0x3DFFFFFF;
+            colPillText = 0xFFFFFFFF;
+            colBand = 0x33000000;
+            colBandStroke = 0x1FFFFFFF;
             scrimColors = new int[]{0x4D000000, 0x59000000, 0xD9000000};
         }
     }
@@ -337,17 +339,16 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         W = getResources().getDisplayMetrics().widthPixels;
         H = getResources().getDisplayMetrics().heightPixels;
         side = dp(40);
-        // cells shrink to fit COLS per row; cards are 16:9 Material media
+        // cells shrink to fit COLS per row; cards keep the 16:9 TV banner shape
         int gap = dp(24);
         int dockCell = (W - 2 * side - 2 * dp(16)) / COLS, dockCardW = dockCell - gap;
         int dockCardH = dockCardW * 9 / 16;
-        int dockLabel = dp(30);
         int gridCell = (W - 2 * side + gap) / COLS;
         int gridCardW = gridCell - gap;
         int gridCardH = gridCardW * 9 / 16;
-        int bandH = dockCardH + dockLabel, bandBottom = dp(26);
+        int bandH = dockCardH + dp(28), bandBottom = dp(26);
         bandTop = H - bandBottom - bandH;
-        rowH = gridCardH + dp(36);
+        rowH = gridCardH + dp(42);
         gridTop = H + dp(56);
 
         root = new FrameLayout(this);
@@ -392,8 +393,14 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         int glowCx = side + dp(110), glowCy = bandTop - dp(44);
         content.addView(glow, at(dp(900), dp(600), glowCx - dp(360), glowCy - dp(300)));
 
+        // dock band
+        View band = new View(this);
+        band.setBackground(Ui.rounded(colBand, dp(24), dp(1), colBandStroke));
+        content.addView(band, at(W - 2 * side, bandH, side, bandTop));
+
         // the single glass highlight (below tiles and pills)
         highlight = new GlassHighlight(this);
+        if (lightTheme) highlight.setColors(0x2E000000, 0x70000000);
         highlight.setAlpha(0f);
         content.addView(highlight, new FrameLayout.LayoutParams(-1, -1));
 
@@ -403,10 +410,10 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         tl.setOrientation(LinearLayout.VERTICAL);
         greeting = Ui.text(this, 600, 13, colTextDim);
         greeting.setLetterSpacing(0.24f);
-        clock = Ui.text(this, 500, 64, colText);
+        clock = Ui.text(this, 200, 108, colText);
         clock.setLetterSpacing(-0.015f);
         clock.setIncludeFontPadding(false);
-        clock.setShadowLayer(dp(10), 0, dp(4), 0x73000000);
+        clock.setShadowLayer(dp(10), 0, dp(4), lightTheme ? 0x40000000 : 0x73000000);
         date = Ui.text(this, 600, 13, colHeader);
         date.setLetterSpacing(0.22f);
         tl.addView(greeting);
@@ -415,7 +422,7 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         clp.leftMargin = -dp(4);
         tl.addView(clock, clp);
         View rule = new View(this);
-        rule.setBackground(Ui.rounded(0x8CFFFFFF, dp(2), 0, 0));
+        rule.setBackground(Ui.rounded(lightTheme ? 0x8C1A1C1E : 0x8CFFFFFF, dp(2), 0, 0));
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(dp(38), dp(3));
         rlp.topMargin = dp(12);
         tl.addView(rule, rlp);
@@ -424,11 +431,9 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         tl.addView(date, dlp);
         content.addView(tl, at(W / 2, -2, side, dp(30)));
 
-        // Material top-bar strip: one tonal container, pills as tabs inside it
+        // pills: Inputs, Wi-Fi, Settings
         pillRow = new LinearLayout(this);
         pillRow.setOrientation(LinearLayout.HORIZONTAL);
-        pillRow.setBackground(Ui.rounded(colStrip, dp(30), dp(1), colStripStroke));
-        pillRow.setPadding(dp(5), dp(5), dp(5), dp(5));
         pills[0] = pill(R.drawable.ic_input, "Inputs");
         pills[1] = pill(R.drawable.ic_wifi, "Wi-Fi");
         wifiText = (TextView) ((ViewGroup) pills[1]).getChildAt(1);
@@ -440,7 +445,7 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         pills[7] = pill(R.drawable.ic_theme, null);
         for (int i = 0; i < PILLS; i++) {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(36));
-            if (i > 0) lp.leftMargin = dp(4);
+            if (i > 0) lp.leftMargin = dp(10);
             pillRow.addView(pills[i], lp);
         }
         FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
@@ -482,11 +487,11 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         clp2.rightMargin = side;
         content.addView(counters, clp2);
 
-        // dock: Google TV apps row, no band, labels under the round icons
-        dockAdapter = new TileAdapter(dockCell, dockCardW, dockCardH, dockLabel, true, colCardLabel);
+        // dock
+        dockAdapter = new TileAdapter(dockCell, dockCardW, dockCardH, 0, false, colCardLabel);
         dockRv = recycler(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false), dockAdapter);
-        content.addView(dockRv, at(dockCell * COLS, bandH, side + dp(28) - (dockCell - dockCardW) / 2,
-                bandTop));
+        content.addView(dockRv, at(dockCell * COLS, dockCardH, side + dp(28) - (dockCell - dockCardW) / 2,
+                bandTop + (bandH - dockCardH) / 2));
 
 
         // grid
@@ -498,11 +503,11 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         gridRv = recycler(new GridLayoutManager(this, COLS), gridAdapter);
         content.addView(gridRv, at(gridCell * COLS, rowH, side - (gridCell - gridCardW) / 2, gridTop));
 
-        // hovered app's name, floating above the focused icon
-        hoverName = Ui.text(this, 500, 30, colText);
+        // focused app's name floating above its card (hidden on the pills row)
+        hoverName = Ui.text(this, 500, 28, colText);
         hoverName.setLetterSpacing(-0.01f);
         hoverName.setGravity(Gravity.CENTER);
-        hoverName.setShadowLayer(dp(8), 0, dp(3), 0x80000000);
+        hoverName.setShadowLayer(dp(8), 0, dp(3), lightTheme ? 0x40000000 : 0x80000000);
         hoverName.setFocusable(false);
         hoverName.setAlpha(0f);
         content.addView(hoverName, new FrameLayout.LayoutParams(-2, -2));
@@ -575,7 +580,7 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         LinearLayout p = new LinearLayout(this);
         p.setOrientation(LinearLayout.HORIZONTAL);
         p.setGravity(Gravity.CENTER_VERTICAL);
-        p.setBackgroundColor(0x00000000);
+        p.setBackground(Ui.rounded(colPillFill, dp(20), dp(1), colPillStroke));
         int padH = label == null ? dp(9) : dp(14);
         p.setPadding(padH, 0, padH, 0);
         p.setAlpha(0.8f);
@@ -583,7 +588,7 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         iv.setImageResource(icon);
         p.addView(iv, new LinearLayout.LayoutParams(dp(18), dp(18)));
         if (label != null) {
-            TextView t = Ui.text(this, 400, 14, 0xFFFFFFFF);
+            TextView t = Ui.text(this, 400, 14, colPillText);
             t.setText(label);
             t.setMaxWidth(dp(170));
             t.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -1075,7 +1080,10 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
 
         dockAdapter.setFocused(dockRv, zone == Zone.DOCK ? dockIdx : -1);
         gridAdapter.setFocused(gridRv, zone == Zone.GRID ? gridIdx : -1);
-        stylePills();
+        for (int i = 0; i < PILLS; i++) {
+            float a = zone == Zone.TOP && i == topIdx ? 1f : 0.8f;
+            pills[i].animate().alpha(a).setDuration(150).start();
+        }
 
         // scroll: dock/top at rest, grid rows bring the grid up one row at a time
         float shift = 0;
@@ -1104,7 +1112,6 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
                     .scrollToPositionWithOffset(dockIdx, dp(28));
             if (!dockScrollRetry) {
                 dockScrollRetry = true;
-                hoverName.animate().alpha(0f).setDuration(120).start();
                 content.post(() -> applyFocus(false));
                 return;
             }
@@ -1113,74 +1120,11 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         }
 
         RectF target = targetRect();
-        if (zone == Zone.TOP) {
-            // the focused tab's own inverse fill is the indicator; no ring here
-            highlight.animate().alpha(0f).setDuration(150).start();
-        } else if (target != null) {
-            AppRepo.App fa = null;
-            if (zone == Zone.DOCK && dockIdx < dockAdapter.getItemCount()) fa = dockAdapter.apps.get(dockIdx);
-            else if (zone == Zone.GRID && gridIdx < gridAdapter.getItemCount()) fa = gridAdapter.apps.get(gridIdx);
-            if (fa != null) {
-                highlight.setRingColor(fa.glow);
-                moveHighlight(target, animate && hlPlaced);
-            } else {
-                highlight.animate().alpha(0f).setDuration(150).start();
-            }
-        } else {
-            highlight.animate().alpha(0f).setDuration(150).start();
-        }
+        if (target != null) moveHighlight(target, animate && hlPlaced);
         placeHoverName(target);
     }
 
-    private RectF targetRect() {
-        if (zone == Zone.TOP) {
-            View p = pills[topIdx];
-            float x = pillRow.getLeft() + p.getLeft(), y = pillRow.getTop() + p.getTop();
-            if (p.getWidth() == 0) return null;
-            float o = dp(3);
-            hlRadius = p.getHeight() / 2f + o;
-            return new RectF(x - o, y - o, x + p.getWidth() + o, y + p.getHeight() + o);
-        }
-        RecyclerView rv = zone == Zone.DOCK ? dockRv : gridRv;
-        int pos = zone == Zone.DOCK ? dockIdx : gridIdx;
-        RecyclerView.ViewHolder vh = rv.findViewHolderForAdapterPosition(pos);
-        if (vh == null) return null;
-        View card = vh.itemView.findViewById(R.id.card);
-        float cx = rv.getLeft() + vh.itemView.getLeft() + card.getLeft() + card.getWidth() / 2f;
-        float cy = rv.getTop() + vh.itemView.getTop() + card.getTop() + card.getHeight() / 2f;
-        float hw = card.getWidth() * TileAdapter.FOCUS_SCALE / 2f + dp(6);
-        float hh = card.getHeight() * TileAdapter.FOCUS_SCALE / 2f + dp(6);
-        hlRadius = dp(26);   // 20 dp card corners + 6 dp ring offset
-        return new RectF(cx - hw, cy - hh, cx + hw, cy + hh);
-    }
-
-    /** Material tabs: inactive tabs are transparent, the focused tab fills inverse + scales 1.05. */
-    private void stylePills() {
-        for (int i = 0; i < PILLS; i++) {
-            boolean f = zone == Zone.TOP && i == topIdx;
-            View p = pills[i];
-            if (f) {
-                p.setBackground(Ui.rounded(colInverse, dp(18), 0, 0));
-                p.animate().scaleX(1.05f).scaleY(1.05f).setDuration(150).start();
-            } else {
-                p.setBackgroundColor(0x00000000);
-                p.animate().scaleX(1f).scaleY(1f).setDuration(150).start();
-            }
-            p.setAlpha(f ? 1f : 0.8f);
-            int content = f ? colOnInverse : colText;
-            if (p instanceof ViewGroup) {
-                ViewGroup g = (ViewGroup) p;
-                for (int k = 0; k < g.getChildCount(); k++) {
-                    View ch = g.getChildAt(k);
-                    if (ch instanceof TextView) ((TextView) ch).setTextColor(content);
-                    else if (ch instanceof ImageView) ((ImageView) ch).setColorFilter(
-                            content, android.graphics.PorterDuff.Mode.SRC_IN);
-                }
-            }
-        }
-    }
-
-    /** Shows the focused app's name above its icon; hides it for pills or no target. */
+    /** Shows the focused app's name above its card; hides it for pills or no target. */
     private void placeHoverName(RectF target) {
         AppRepo.App a = null;
         if (zone == Zone.DOCK && dockIdx < dockAdapter.getItemCount()) a = dockAdapter.apps.get(dockIdx);
@@ -1202,6 +1146,28 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
         hoverName.animate().alpha(1f).setDuration(150).start();
     }
 
+    private RectF targetRect() {
+        if (zone == Zone.TOP) {
+            View p = pills[topIdx];
+            float x = pillRow.getLeft() + p.getLeft(), y = pillRow.getTop() + p.getTop();
+            if (p.getWidth() == 0) return null;
+            float o = dp(3);
+            hlRadius = p.getHeight() / 2f + o;
+            return new RectF(x - o, y - o, x + p.getWidth() + o, y + p.getHeight() + o);
+        }
+        RecyclerView rv = zone == Zone.DOCK ? dockRv : gridRv;
+        int pos = zone == Zone.DOCK ? dockIdx : gridIdx;
+        RecyclerView.ViewHolder vh = rv.findViewHolderForAdapterPosition(pos);
+        if (vh == null) return null;
+        View card = vh.itemView.findViewById(R.id.card);
+        float cx = rv.getLeft() + vh.itemView.getLeft() + card.getLeft() + card.getWidth() / 2f;
+        float cy = rv.getTop() + vh.itemView.getTop() + card.getTop() + card.getHeight() / 2f;
+        float hw = card.getWidth() * TileAdapter.FOCUS_SCALE / 2f + dp(5);
+        float hh = card.getHeight() * TileAdapter.FOCUS_SCALE / 2f + dp(5);
+        hlRadius = dp(24);
+        return new RectF(cx - hw, cy - hh, cx + hw, cy + hh);
+    }
+
     private void moveHighlight(RectF to, boolean animate) {
         if (hlAnim != null) hlAnim.cancel();
         final RectF from = new RectF(hl);
@@ -1213,7 +1179,6 @@ public class HomeActivity extends Activity implements Wallpapers.Listener {
             hlPlaced = true;
             return;
         }
-        highlight.animate().alpha(1f).setDuration(200).start();
         hlAnim = ValueAnimator.ofFloat(0f, 1f);
         hlAnim.setDuration(340);
         hlAnim.setInterpolator(new OvershootInterpolator(1.15f));

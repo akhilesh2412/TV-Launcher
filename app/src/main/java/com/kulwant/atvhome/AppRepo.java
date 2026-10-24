@@ -31,8 +31,6 @@ final class AppRepo {
         boolean leanback;
         boolean youtubeAlias;
         Bitmap banner;
-        /** Square iOS-style icon shown on the tile. */
-        Bitmap icon;
         int glow;
     }
 
@@ -104,7 +102,6 @@ final class AppRepo {
                     yt.draw(cv);
                     a.banner = b;
                     a.glow = vivid(sample(Bitmap.createScaledBitmap(b, 32, 24, true)));
-                    a.icon = buildIcon(c, pm, a);
                     return;
                 }
             }
@@ -133,56 +130,6 @@ final class AppRepo {
         }
         a.banner = b;
         a.glow = vivid(sample(Bitmap.createScaledBitmap(b, 32, 24, true)));
-        a.icon = buildIcon(c, pm, a);
-    }
-
-    /** Square icon for the tile: the app's real icon, or a drawn fallback. */
-    private static Bitmap buildIcon(Context c, PackageManager pm, App a) {
-        final int S = 256;
-        if (a.youtubeAlias) return youtubeIcon(S);
-        try {
-            ActivityInfo ai = pm.getActivityInfo(a.component, 0);
-            Drawable icon = ai.loadIcon(pm);
-            if (icon != null) return drawableBitmap(icon, S, S);
-        } catch (Exception ignored) {
-        }
-        // fallback: dark squircle with the app's first letter
-        Bitmap b = Bitmap.createBitmap(S, S, Bitmap.Config.ARGB_8888);
-        Canvas cv = new Canvas(b);
-        android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        p.setColor(0xFF3A3A40);
-        float r = S * 0.27f;
-        cv.drawRoundRect(0, 0, S, S, r, r, p);
-        String letter = a.label == null || a.label.isEmpty() ? "?"
-                : a.label.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
-        p.setColor(0xFFFFFFFF);
-        p.setTextSize(S * 0.52f);
-        p.setTextAlign(android.graphics.Paint.Align.CENTER);
-        android.graphics.Rect bounds = new android.graphics.Rect();
-        p.getTextBounds(letter, 0, letter.length(), bounds);
-        cv.drawText(letter, S / 2f, S / 2f - bounds.exactCenterY(), p);
-        return b;
-    }
-
-    /** iOS-style YouTube icon: red squircle with a white play triangle. */
-    private static Bitmap youtubeIcon(int s) {
-        Bitmap b = Bitmap.createBitmap(s, s, Bitmap.Config.ARGB_8888);
-        Canvas cv = new Canvas(b);
-        android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        p.setColor(0xFFFF0000);
-        float r = s * 0.27f;
-        cv.drawRoundRect(0, 0, s, s, r, r, p);
-        android.graphics.Path tri = new android.graphics.Path();
-        float cx = s / 2f, cy = s / 2f, hw = s * 0.17f, hh = s * 0.21f;
-        tri.moveTo(cx - hw, cy - hh);
-        tri.lineTo(cx - hw, cy + hh);
-        tri.lineTo(cx + hw * 1.25f, cy);
-        tri.close();
-        p.setColor(0xFFFFFFFF);
-        p.setStyle(android.graphics.Paint.Style.FILL);
-        p.setStrokeJoin(android.graphics.Paint.Join.ROUND);
-        cv.drawPath(tri, p);
-        return b;
     }
 
     private static Bitmap drawableBitmap(Drawable d, int w, int h) {

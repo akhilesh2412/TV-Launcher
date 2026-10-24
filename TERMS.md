@@ -4,7 +4,7 @@ Last updated: 24 October 2026
 
 These terms govern your use of **Material TV Launcher** (the "App"), an
 Android TV launcher published at
-https://github.com/Akhilesh2412/MaterialTV-Launcher. By installing or using
+https://github.com/Akhilesh2412/TV-Launcher. By installing or using
 the App, you agree to these terms. If you do not agree, do not install or use
 the App.
 
@@ -78,4 +78,4 @@ shall be subject to the courts of Gorakhpur, Uttar Pradesh, India.
 ## 10. Contact
 
 Questions about these terms: open an issue at
-https://github.com/Akhilesh2412/MaterialTV-Launcher/issues.
+https://github.com/Akhilesh2412/TV-Launcher/issues.

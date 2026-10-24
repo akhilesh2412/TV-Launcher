@@ -21,11 +21,10 @@ final class GlassHighlight extends View {
         stroke.setColor(0x70FFFFFF);
     }
 
-    /** Material focus ring: no fill, a 3 dp ring in the focused app's own colour. */
-    void setRingColor(int color) {
-        fill.setColor(0x00000000);
-        stroke.setColor(color);
-        stroke.setStrokeWidth(Ui.dp(getContext(), 3f));
+    /** Light theme: dark translucent fill + dark ring instead of the white glass. */
+    void setColors(int fillColor, int strokeColor) {
+        fill.setColor(fillColor);
+        stroke.setColor(strokeColor);
     }
 
     void set(RectF r, float radius) {
